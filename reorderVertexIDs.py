@@ -1,6 +1,11 @@
 import maya.cmds as cmds
 import maya.api.OpenMaya as om
 
+#from sets import Set
+
+sourceComponents = {'face':'','vertex1':'','vertex2':''}
+destinationComponents = {'face':'','vertex1':'','vertex2':''}
+
 def startUI():
 		windowName = 'reorderVertexIDsUI'
 
@@ -8,106 +13,905 @@ def startUI():
 			cmds.deleteUI( windowName, wnd=True )
 
 		#create window
-		window = cmds.window( windowName, title='Reorder Vertex IDs - v1.1 : Ryan Roberts', mb=True, mbv=True )
+		window = cmds.window( windowName, title='Reorder Vertex IDs - v1.2 : Ryan Roberts', mb=True, mbv=True )
 
 		#layout
-		mainFormLayout = cmds.formLayout( parent=window )
+		mainTabLayout = cmds.tabLayout( parent=window )
 
-		#controls
-		sourceMeshTitle = cmds.text( label='Source Mesh', parent=mainFormLayout )
-		sourceMeshTextField = cmds.textField( 'sourceMeshTextField', height=30, placeholderText='Source Mesh Name', parent=mainFormLayout )
-		getSourceMeshButton = cmds.button( label='Get Source Mesh', height=30, c=getSourceMesh, parent=mainFormLayout )
+		traverseFormLayout = cmds.formLayout( parent=mainTabLayout )
+		positionFormLayout = cmds.formLayout( parent=mainTabLayout )
+		helpFormLayout = cmds.formLayout( parent=mainTabLayout )
+
+		tabLabels = [
+			[traverseFormLayout, 'By Traversing'],
+			[positionFormLayout, 'By Position'],
+			[helpFormLayout, 'Help']
+		]
+
+		cmds.tabLayout( mainTabLayout, edit=True, tabLabel=tabLabels )
+
+		#####################################################################
+		#####################################################################
+		##
+		## by position controls
+		##
+		#####################################################################
+		#####################################################################
+
+		#####################################################################
+		#
+		# source mesh controls
+		#
+		#####################################################################
+
+		positionSourceMeshTitle = cmds.text( label='Source Mesh', parent=positionFormLayout )
+		positionSourceMeshTextField = cmds.textField( 'positionSourceMeshTextField', height=30, placeholderText='Source Mesh Name', parent=positionFormLayout )
+		positionGetSourceMeshButton = cmds.button( label='Get Source Mesh', height=30, c=getSourceMesh, parent=positionFormLayout )
 
 		attachPositionData = [
-			[sourceMeshTitle,'top',5,0],
-			[sourceMeshTitle,'left',5,0],
-			[sourceMeshTitle,'right',2,50],
+			[positionSourceMeshTitle,'top',5,0],
+			[positionSourceMeshTitle,'left',5,0],
+			[positionSourceMeshTitle,'right',2,50],
 
-			[sourceMeshTextField,'left',5,0],
-			[sourceMeshTextField,'right',2,50],
+			[positionSourceMeshTextField,'left',5,0],
+			[positionSourceMeshTextField,'right',2,50],
 
-			[getSourceMeshButton,'left',5,0],
-			[getSourceMeshButton,'right',2,50]
+			[positionGetSourceMeshButton,'left',5,0],
+			[positionGetSourceMeshButton,'right',2,50]
 		]
 
 		attachControlData = [
-			[sourceMeshTextField,'top',5,sourceMeshTitle],
-			[getSourceMeshButton,'top',5,sourceMeshTextField]
+			[positionSourceMeshTextField,'top',5,positionSourceMeshTitle],
+			[positionGetSourceMeshButton,'top',5,positionSourceMeshTextField]
 		]
 
-		cmds.formLayout( mainFormLayout, edit=True, ap=attachPositionData, ac=attachControlData )
+		cmds.formLayout( positionFormLayout, edit=True, ap=attachPositionData, ac=attachControlData )
 
-		destinationMeshTitle = cmds.text( label='Destination Mesh', parent=mainFormLayout )
-		destinationMeshTextField = cmds.textField( 'destinationMeshTextField', height=30, placeholderText='Destination Mesh Name', parent=mainFormLayout )
-		getDestinationMeshButton = cmds.button( label='Get Destination Mesh', height=30, c=getDestinationMesh, parent=mainFormLayout )
+		#####################################################################
+		#
+		# destination mesh controls
+		#
+		#####################################################################
+
+		positionDestinationMeshTitle = cmds.text( label='Destination Mesh', parent=positionFormLayout )
+		positionDestinationMeshTextField = cmds.textField( 'positionDestinationMeshTextField', height=30, placeholderText='Destination Mesh Name', parent=positionFormLayout )
+		positionGetDestinationMeshButton = cmds.button( label='Get Destination Mesh', height=30, c=getDestinationMesh, parent=positionFormLayout )
 
 		attachPositionData = [
-			[destinationMeshTitle,'top',5,0],
-			[destinationMeshTitle,'left',2,50],
-			[destinationMeshTitle,'right',5,100],
+			[positionDestinationMeshTitle,'top',5,0],
+			[positionDestinationMeshTitle,'left',2,50],
+			[positionDestinationMeshTitle,'right',5,100],
 
-			[destinationMeshTextField,'left',2,50],
-			[destinationMeshTextField,'right',5,100],
+			[positionDestinationMeshTextField,'left',2,50],
+			[positionDestinationMeshTextField,'right',5,100],
 
-			[getDestinationMeshButton,'left',2,50],
-			[getDestinationMeshButton,'right',5,100]
+			[positionGetDestinationMeshButton,'left',2,50],
+			[positionGetDestinationMeshButton,'right',5,100]
 		]
 
 		attachControlData = [
-			[destinationMeshTextField,'top',5,destinationMeshTitle],
-			[getDestinationMeshButton,'top',5,destinationMeshTextField]
+			[positionDestinationMeshTextField,'top',5,positionDestinationMeshTitle],
+			[positionGetDestinationMeshButton,'top',5,positionDestinationMeshTextField]
 		]
 
-		cmds.formLayout( mainFormLayout, edit=True, ap=attachPositionData, ac=attachControlData )
+		cmds.formLayout( positionFormLayout, edit=True, ap=attachPositionData, ac=attachControlData )
 
-		switchMeshesButton = cmds.button( label='Switch Meshes', height=30, c=switchMeshes, parent=mainFormLayout )
+		#####################################################################
+		#
+		# switch mesh controls
+		#
+		#####################################################################
+
+		positionSwitchMeshesButton = cmds.button( label='Switch Meshes', height=30, c=switchMeshes, parent=positionFormLayout )
 
 		attachPositionData = [
-			[switchMeshesButton,'left',5,0],
-			[switchMeshesButton,'right',5,100]
+			[positionSwitchMeshesButton,'left',5,0],
+			[positionSwitchMeshesButton,'right',5,100]
 		]
 
 		attachControlData = [
-			[switchMeshesButton,'top',5,getSourceMeshButton]
+			[positionSwitchMeshesButton,'top',5,positionGetSourceMeshButton]
 		]
 		
-		cmds.formLayout( mainFormLayout, edit=True, ap=attachPositionData, ac=attachControlData )
+		cmds.formLayout( positionFormLayout, edit=True, ap=attachPositionData, ac=attachControlData )
 
-		reorderPointsButton = cmds.button( label='Reorder Vertex IDs', height=60, c=reorderDoIt, parent=mainFormLayout )
+		#####################################################################
+		#
+		# position reorder controls
+		#
+		#####################################################################
+
+		positionReorderPointsButton = cmds.button( label='Reorder Vertex IDs', height=60, c=positionReorderDoIt, parent=positionFormLayout )
 
 		attachPositionData = [
-			[reorderPointsButton,'left',5,0],
-			[reorderPointsButton,'right',5,100]
+			[positionReorderPointsButton,'left',5,0],
+			[positionReorderPointsButton,'right',5,100]
 		]
 
 		attachControlData = [
-			[reorderPointsButton,'top',15,switchMeshesButton]
+			[positionReorderPointsButton,'top',15,positionSwitchMeshesButton]
 		]
 		
-		cmds.formLayout( mainFormLayout, edit=True, ap=attachPositionData, ac=attachControlData )
+		cmds.formLayout( positionFormLayout, edit=True, ap=attachPositionData, ac=attachControlData )
+
+		#####################################################################
+		#####################################################################
+		##
+		## by traverse controls
+		##
+		#####################################################################
+		#####################################################################
+
+		#####################################################################
+		#
+		# source components controls
+		#
+		#####################################################################
+
+		traverseSourceComponentsTitle = cmds.text( label='Source Components', parent=traverseFormLayout )
+		traverseGetSourceFaceButton = cmds.button( label='Get Face', c=getSourceFace, parent=traverseFormLayout )
+		traverseGetSourceVertex1Button = cmds.button( label='Get Vtx 1', c=getSourceVertex1, parent=traverseFormLayout )
+		traverseGetSourceVertex2Button = cmds.button( label='Get Vtx 2', c=getSourceVertex2, parent=traverseFormLayout )
+		traverseSourceTextScrollList = cmds.textScrollList( 'traverseSourceTextScrollList', nr=3, ams=True, sc=traverseSelectItems, parent=traverseFormLayout )
+		traverseClearSourceButton = cmds.button( label='Clear', c=clearSourceComponents, parent=traverseFormLayout )
+
+		attachPositionData = [
+			[traverseSourceComponentsTitle,'top',5,0],
+			[traverseSourceComponentsTitle,'left',5,0],
+			[traverseSourceComponentsTitle,'right',2,50],
+
+			[traverseGetSourceFaceButton,'left',5,0],
+			[traverseGetSourceFaceButton,'right',0,17],
+
+			[traverseGetSourceVertex1Button,'left',0,17],
+			[traverseGetSourceVertex1Button,'right',0,33],
+
+			[traverseGetSourceVertex2Button,'left',0,33],
+			[traverseGetSourceVertex2Button,'right',5,50],
+
+			[traverseSourceTextScrollList,'left',5,0],
+			[traverseSourceTextScrollList,'right',2,50],
+
+			[traverseClearSourceButton,'left',5,0],
+			[traverseClearSourceButton,'right',2,50]
+		]
+
+		attachControlData = [
+			[traverseGetSourceFaceButton,'top',5,traverseSourceComponentsTitle],
+			[traverseGetSourceVertex1Button,'top',5,traverseSourceComponentsTitle],
+			[traverseGetSourceVertex2Button,'top',5,traverseSourceComponentsTitle],
+			[traverseSourceTextScrollList,'top',5,traverseGetSourceFaceButton],
+			[traverseClearSourceButton,'top',5,traverseSourceTextScrollList]
+		]
+
+		cmds.formLayout( traverseFormLayout, edit=True, ap=attachPositionData, ac=attachControlData )
+
+		#####################################################################
+		#
+		# destination components controls
+		#
+		#####################################################################
+
+		traverseDestinationComponentsTitle = cmds.text( label='Destination Components', parent=traverseFormLayout )
+		traverseGetDestinationFaceButton = cmds.button( label='Get Face', c=getDestinationFace, parent=traverseFormLayout )
+		traverseGetDestinationVertex1Button = cmds.button( label='Get Vtx 1', c=getDestinationVertex1, parent=traverseFormLayout )
+		traverseGetDestinationVertex2Button = cmds.button( label='Get Vtx 2', c=getDestinationVertex2, parent=traverseFormLayout )
+		traverseDestinationTextScrollList = cmds.textScrollList( 'traverseDestinationTextScrollList', nr=3, ams=True, sc=traverseSelectItems, parent=traverseFormLayout )
+		traverseClearDestinationButton = cmds.button( label='Clear', c=clearDestinationComponents, parent=traverseFormLayout )
+
+		attachPositionData = [
+			[traverseDestinationComponentsTitle,'top',5,0],
+			[traverseDestinationComponentsTitle,'left',2,50],
+			[traverseDestinationComponentsTitle,'right',5,100],
+
+			[traverseGetDestinationFaceButton,'left',5,50],
+			[traverseGetDestinationFaceButton,'right',0,67],
+
+			[traverseGetDestinationVertex1Button,'left',0,67],
+			[traverseGetDestinationVertex1Button,'right',0,83],
+
+			[traverseGetDestinationVertex2Button,'left',0,83],
+			[traverseGetDestinationVertex2Button,'right',5,100],
+
+			[traverseDestinationTextScrollList,'left',2,50],
+			[traverseDestinationTextScrollList,'right',5,100],
+
+			[traverseClearDestinationButton,'left',2,50],
+			[traverseClearDestinationButton,'right',5,100]
+		]
+
+		attachControlData = [
+			[traverseGetDestinationFaceButton,'top',5,traverseDestinationComponentsTitle],
+			[traverseGetDestinationVertex1Button,'top',5,traverseDestinationComponentsTitle],
+			[traverseGetDestinationVertex2Button,'top',5,traverseDestinationComponentsTitle],
+			[traverseDestinationTextScrollList,'top',5,traverseGetDestinationFaceButton],
+			[traverseClearDestinationButton,'top',5,traverseDestinationTextScrollList]
+		]
+
+		cmds.formLayout( traverseFormLayout, edit=True, ap=attachPositionData, ac=attachControlData )
+
+		#####################################################################
+		#
+		# switch components controls
+		#
+		#####################################################################
+
+		traverseSwitchComponentsButton = cmds.button( label='Switch Components', height=30, c=switchComponents, parent=traverseFormLayout )
+
+		attachPositionData = [
+			[traverseSwitchComponentsButton,'left',5,0],
+			[traverseSwitchComponentsButton,'right',5,100]
+		]
+
+		attachControlData = [
+			[traverseSwitchComponentsButton,'top',5,traverseClearSourceButton]
+		]
+		
+		cmds.formLayout( traverseFormLayout, edit=True, ap=attachPositionData, ac=attachControlData )
+
+		#####################################################################
+		#
+		# traverse reorder controls
+		#
+		#####################################################################
+
+		traverseReorderPointsButton = cmds.button( label='Reorder Vertex IDs', height=60, c=traverseReorderDoIt, parent=traverseFormLayout )
+
+		attachPositionData = [
+			[traverseReorderPointsButton,'left',5,0],
+			[traverseReorderPointsButton,'right',5,100],
+			[traverseReorderPointsButton,'bottom',5,100]
+		]
+
+		#attachControlData = [
+		#	[traverseReorderPointsButton,'top',15,traverseSwitchComponentsButton]
+		#]
+		
+		cmds.formLayout( traverseFormLayout, edit=True, ap=attachPositionData )
+
+		#####################################################################
+		#
+		# traverse target list controls
+		#
+		#####################################################################
+
+		traverseTargetListTitle = cmds.text( label='Target List', parent=traverseFormLayout )
+		traverseTargetTextScrollList = cmds.textScrollList( 'traverseTargetTextScrollList', sc=traverseSelectTargets, parent=traverseFormLayout )
+		traverseTargetGetButton = cmds.button( label='Get Mesh Targets', height=30, c=traverseGetTargetList, parent=traverseFormLayout )
+		traverseTargetClearButton = cmds.button( label='Clear Target List', height=30, c=traverseClearTargetList, parent=traverseFormLayout )
+
+		attachPositionData = [
+			[traverseTargetListTitle,'left',5,0],
+			[traverseTargetListTitle,'right',5,100],
+
+			[traverseTargetTextScrollList,'left',5,0],
+			[traverseTargetTextScrollList,'right',5,100],
+
+			[traverseTargetGetButton,'left',5,0],
+			[traverseTargetGetButton,'right',2,50],
+
+			[traverseTargetClearButton,'left',2,50],
+			[traverseTargetClearButton,'right',5,100]
+		]
+
+		attachControlData = [
+			[traverseTargetListTitle,'top',15,traverseSwitchComponentsButton],
+
+			[traverseTargetTextScrollList,'top',5,traverseTargetListTitle],
+			[traverseTargetTextScrollList,'bottom',5,traverseTargetGetButton],
+
+			[traverseTargetGetButton,'bottom',15,traverseReorderPointsButton],
+			[traverseTargetClearButton,'bottom',15,traverseReorderPointsButton]
+		]
+
+		cmds.formLayout( traverseFormLayout, edit=True, ap=attachPositionData, ac=attachControlData )
+
+		#####################################################################
+		#
+		# show window
+		#
+		#####################################################################
 
 		cmds.showWindow( windowName )
 
+def traverseSelectItems(*args):
+	sourceSelectedItems = cmds.textScrollList( 'traverseSourceTextScrollList', query=True, si=True )
+	destinationSelectedItems = cmds.textScrollList( 'traverseDestinationTextScrollList', query=True, si=True )
+	
+	if sourceSelectedItems == None:
+		sourceSelectedItems = []
+
+	if destinationSelectedItems == None:
+		destinationSelectedItems = []
+
+	allSelectedItems = sourceSelectedItems+destinationSelectedItems
+	cmds.select( allSelectedItems )
+
+def traverseSelectTargets(*args):
+	targetItems = cmds.textScrollList( 'traverseTargetTextScrollList', query=True, si=True )
+
+	if targetItems == None:
+		targetItems = []
+
+	cmds.select( targetItems )
+
+def traverseUpdateSourceItems(*args):
+	cmds.textScrollList( 'traverseSourceTextScrollList', edit=True, ra=True )
+	cmds.textScrollList( 'traverseSourceTextScrollList', edit=True, a=sourceComponents['face'] )
+	cmds.textScrollList( 'traverseSourceTextScrollList', edit=True, a=sourceComponents['vertex1'] )
+	cmds.textScrollList( 'traverseSourceTextScrollList', edit=True, a=sourceComponents['vertex2'] )
+
+def traverseUpdateDestinationItems(*args):
+	cmds.textScrollList( 'traverseDestinationTextScrollList', edit=True, ra=True )
+	cmds.textScrollList( 'traverseDestinationTextScrollList', edit=True, a=destinationComponents['face'] )
+	cmds.textScrollList( 'traverseDestinationTextScrollList', edit=True, a=destinationComponents['vertex1'] )
+	cmds.textScrollList( 'traverseDestinationTextScrollList', edit=True, a=destinationComponents['vertex2'] )
+
+def clearSourceComponents(*args):
+	sourceComponents['face'] = ''
+	sourceComponents['vertex1'] = ''
+	sourceComponents['vertex2'] = ''
+	traverseUpdateSourceItems()
+
+def clearDestinationComponents(*args):
+	destinationComponents['face'] = ''
+	destinationComponents['vertex1'] = ''
+	destinationComponents['vertex2'] = ''
+	traverseUpdateDestinationItems()
+
+def traverseGetTargetList(*args):
+	selected = cmds.ls(sl=True)
+	cmds.textScrollList( 'traverseTargetTextScrollList', edit=True, ra=True )
+
+	for item in selected:
+		cmds.textScrollList( 'traverseTargetTextScrollList', edit=True, a=item )
+
+def traverseClearTargetList(*args):
+	cmds.textScrollList( 'traverseTargetTextScrollList', edit=True, ra=True )
+
+def getSourceFace(*args):
+	selected = cmds.ls(sl=True)
+
+	if selected is not None and len(selected) > 0:
+		sourceComponents['face'] = selected[0]
+		traverseUpdateSourceItems()
+
+def getDestinationFace(*args):
+	selected = cmds.ls(sl=True)
+
+	if selected is not None and len(selected) > 0:
+		destinationComponents['face'] = selected[0]
+		traverseUpdateDestinationItems()
+	
+def getSourceVertex1(*args):
+	selected = cmds.ls(sl=True)
+
+	if selected is not None and len(selected) > 0:
+		sourceComponents['vertex1'] = selected[0]
+		traverseUpdateSourceItems()
+
+def getDestinationVertex1(*args):
+	selected = cmds.ls(sl=True)
+
+	if selected is not None and len(selected) > 0:
+		destinationComponents['vertex1'] = selected[0]
+		traverseUpdateDestinationItems()
+	
+def getSourceVertex2(*args):
+	selected = cmds.ls(sl=True)
+
+	if selected is not None and len(selected) > 0:
+		sourceComponents['vertex2'] = selected[0]
+		traverseUpdateSourceItems()
+
+def getDestinationVertex2(*args):
+	selected = cmds.ls(sl=True)
+
+	if selected is not None and len(selected) > 0:
+		destinationComponents['vertex2'] = selected[0]
+		traverseUpdateDestinationItems()
+	
 def getSourceMesh(*args):
 	selected = cmds.ls(sl=True)
 
 	if selected is not None and len(selected) > 0:
-		cmds.textField( 'sourceMeshTextField', edit=True, text=selected[0] )
+		cmds.textField( 'positionSourceMeshTextField', edit=True, text=selected[0] )
 
 def getDestinationMesh(*args):
 	selected = cmds.ls(sl=True)
 
 	if selected is not None and len(selected) > 0:
-		cmds.textField( 'destinationMeshTextField', edit=True, text=selected[0] )
+		cmds.textField( 'positionDestinationMeshTextField', edit=True, text=selected[0] )
 
 def switchMeshes(*args):
-	sourceMeshText = cmds.textField( 'sourceMeshTextField', query=True, text=True )
-	destinationMeshText = cmds.textField( 'destinationMeshTextField', query=True, text=True )
+	sourceMeshText = cmds.textField( 'positionSourceMeshTextField', query=True, text=True )
+	destinationMeshText = cmds.textField( 'positionDestinationMeshTextField', query=True, text=True )
 
-	cmds.textField( 'sourceMeshTextField', edit=True, text=destinationMeshText )
-	cmds.textField( 'destinationMeshTextField', edit=True, text=sourceMeshText )
+	cmds.textField( 'positionSourceMeshTextField', edit=True, text=destinationMeshText )
+	cmds.textField( 'positionDestinationMeshTextField', edit=True, text=sourceMeshText )
 
-def reorderDoIt(*args):
+def switchComponents(*args):
+	sourceFace    = sourceComponents['face']
+	sourceVertex1 = sourceComponents['vertex1']
+	sourceVertex2 = sourceComponents['vertex2']
+	destinationFace    = destinationComponents['face']
+	destinationVertex1 = destinationComponents['vertex1']
+	destinationVertex2 = destinationComponents['vertex2']
+
+	sourceComponents['face']    = destinationFace
+	sourceComponents['vertex1'] = destinationVertex1
+	sourceComponents['vertex2'] = destinationVertex2
+	destinationComponents['face']    = sourceFace
+	destinationComponents['vertex1'] = sourceVertex1
+	destinationComponents['vertex2'] = sourceVertex2
+
+	traverseUpdateSourceItems()
+	traverseUpdateDestinationItems()
+
+def traverseReorderDoIt(*args):
+	faces = [sourceComponents['face'], destinationComponents['face']]
+	vertex1s = [sourceComponents['vertex1'], destinationComponents['vertex1']]
+	vertex2s = [sourceComponents['vertex2'], destinationComponents['vertex2']]
+
+	definedError = False
+	if sourceComponents['face'] == '':
+		cmds.warning('source face has not been defined')
+		definedError = True
+	if sourceComponents['vertex1'] == '':
+		cmds.warning('source vertex1 has not been defined')
+		definedError = True
+	if sourceComponents['vertex2'] == '':
+		cmds.warning('source vertex2 has not been defined')
+		definedError = True
+
+	if destinationComponents['face'] == '':
+		cmds.warning('destination face has not been defined')
+		definedError = True
+	if destinationComponents['vertex1'] == '':
+		cmds.warning('destination vertex1 has not been defined')
+		definedError = True
+	if destinationComponents['vertex2'] == '':
+		cmds.warning('destination vertex2 has not been defined')
+		definedError = True
+
+	if definedError:
+		cmds.error('not all components have not been defined')
+
+	sourcePointsList = cmds.polyListComponentConversion( sourceComponents['face'], ff=True, tv=True )
+	sourcePoints = cmds.ls(sourcePointsList,fl=True)
+
+	destinationPointsList = cmds.polyListComponentConversion( destinationComponents['face'], ff=True, tv=True )
+	destinationPoints = cmds.ls(destinationPointsList,fl=True)
+
+	#####################################################################
+	#
+	# make sure the faces contain the same number of points
+	#
+	#####################################################################
+
+	if len(sourcePoints) != len(destinationPoints):
+		cmds.error('faces have different number of points, faces need to have the same number of points')
+
+	#####################################################################
+	#
+	# make sure the points are part of the same face
+	#
+	#####################################################################
+
+	pointsError = False
+
+	pointsFound = False
+	pointsList = cmds.polyListComponentConversion( sourceComponents['face'], ff=True, tv=True )
+	points = cmds.ls(pointsList, fl=True)
+	if sourceComponents['vertex1'] in points and sourceComponents['vertex2'] in points:
+		pointsFound = True
+
+	if not pointsFound:
+		cmds.warning('source points need to be part of the same face')
+		pointsError = True
+
+	pointsFound = False
+	pointsList = cmds.polyListComponentConversion( destinationComponents['face'], ff=True, tv=True )
+	points = cmds.ls(pointsList, fl=True)
+	if destinationComponents['vertex1'] in points and destinationComponents['vertex2'] in points:
+		pointsFound = True
+
+	if not pointsFound:
+		cmds.warning('destination points need to be part of the same face')
+		pointsError = True
+
+	if pointsError:
+		cmds.error( 'points need to be part of the same face' )
+
+	#####################################################################
+	#
+	# make sure the points are part of the same edge
+	#
+	#####################################################################
+
+	sourceEdgesList = cmds.polyListComponentConversion( sourceComponents['face'], ff=True, te=True )
+	sourceEdges = cmds.ls(sourceEdgesList, fl=True)
+
+	destinationEdgesList = cmds.polyListComponentConversion( destinationComponents['face'], ff=True, te=True )
+	destinationEdges = cmds.ls(destinationEdgesList, fl=True)
+
+	edgeError = False
+
+	edgeFound = False
+	for edge in sourceEdges:
+		pointsList = cmds.polyListComponentConversion( edge, fe=True, tv=True )
+		points = cmds.ls(pointsList,fl=True)
+		if sourceComponents['vertex1'] in points and sourceComponents['vertex2'] in points:
+			edgeFound = True
+
+	if not edgeFound:
+		cmds.warning('source points need to be part of the same edge')
+		edgeError = True
+
+	edgeFound = False
+	for edge in destinationEdges:
+		pointsList = cmds.polyListComponentConversion( edge, fe=True, tv=True )
+		points = cmds.ls(pointsList,fl=True)
+		if destinationComponents['vertex1'] in points and destinationComponents['vertex2'] in points:
+			edgeFound = True
+
+	if not edgeFound:
+		cmds.warning('destination points need to be part of the same edge')
+		edgeError = True
+
+	if edgeError:
+		cmds.error( 'points need to be part of the same edge' )
+
+	#####################################################################
+	#
+	# make sure destination mesh and target
+	# meshes have the same number of points
+	#
+	#####################################################################
+
+	destMesh = cmds.listRelatives( destinationComponents['face'], parent=True )[0]
+	destMeshTransform = cmds.listRelatives( destMesh, parent=True )[0]
+	destPoints = cmds.ls( destMeshTransform+'.vts[*]', fl=True )
+
+	targetList = cmds.textScrollList( 'traverseTargetTextScrollList', query=True, ai=True )
+
+	if targetList == None:
+		targetList = []
+
+	wrongNumberOfPointFound = False
+	for target in targetList:
+		targetPoints = cmds.ls( target+'.vts[*]', fl=True )
+		if (len(targetPoints) != len(destPoints)):
+			cmds.warning(target+' has a different number of points')
+			wrongNumberOfPointFound = True
+
+	if wrongNumberOfPointFound:
+		cmds.error( 'all target meshes must have the same number of points as the destination mesh' )
+
+	traverseReorder( faces=faces, vertex1s=vertex1s, vertex2s=vertex2s, targetList=targetList )
+
+def traverseReorder(**kwargs):
+	faces = kwargs.get('faces',[])
+	vertex1s = kwargs.get('vertex1s',[])
+	vertex2s = kwargs.get('vertex2s',[])
+	targetList = kwargs.get('targetList',[])
+
+	fromMesh = cmds.listRelatives(faces[0],parent=True)[0]
+	toMesh = cmds.listRelatives(faces[1],parent=True)[0]
+
+	fromFaceId = extractIndex(faces[0])
+	fromVertex1Id = extractIndex(vertex1s[0])
+	fromVertex2Id = extractIndex(vertex2s[0])
+
+	toFaceId = extractIndex(faces[1])
+	toVertex1Id = extractIndex(vertex1s[1])
+	toVertex2Id = extractIndex(vertex2s[1])
+
+	################################################################
+	#
+	# use api to get the mesh data from
+	# the source and destination meshes
+	#
+	################################################################
+	
+	selectionList = om.MSelectionList()
+	selectionList.add( fromMesh )
+	selectionList.add( toMesh )
+	
+	fromDagPath = selectionList.getDagPath(0)
+	toDagPath = selectionList.getDagPath(1)
+	fromMeshFn = om.MFnMesh( fromDagPath )
+	toMeshFn = om.MFnMesh( toDagPath )
+	fromPoints = fromMeshFn.getPoints()
+	toPoints = toMeshFn.getPoints()
+	fromDagNodeFn = om.MFnDagNode(fromDagPath)
+	toDagNodeFn = om.MFnDagNode(toDagPath)
+
+	################################################################
+	#
+	# start creation of poly and point convert tables
+	#
+	################################################################
+
+	toPointConvert = [None]*len(toPoints)
+	toPointConvert[toVertex1Id] = fromVertex1Id
+	toPointConvert[toVertex2Id] = fromVertex2Id
+
+	################################################################
+	#
+	# build lookup tables for points and faces
+	#
+	################################################################
+
+	fromVertices = fromMeshFn.getVertices()
+	toVertices = toMeshFn.getVertices()
+
+	fromVertPolyTable = [None]*len(fromPoints)
+	fromPolyVertTable = []
+	index = 0
+
+	for faceID,numberOfVerts in enumerate(fromVertices[0]):
+		fromPolyVertTable.append([])
+
+		for x in range(numberOfVerts):
+			vertID = fromVertices[1][index]
+			fromPolyVertTable[faceID].append(vertID)
+
+			if fromVertPolyTable[vertID] is None:
+				fromVertPolyTable[vertID] = [faceID]
+			else:
+				fromVertPolyTable[vertID].append(faceID)
+
+			index = index+1
+
+	toVertPolyTable = [None]*len(toPoints)
+	toPolyVertTable = []
+	index = 0
+
+	for faceID,numberOfVerts in enumerate(toVertices[0]):
+		toPolyVertTable.append([])
+
+		for x in range(numberOfVerts):
+			vertID = toVertices[1][index]
+			toPolyVertTable[faceID].append(vertID)
+			
+			if toVertPolyTable[vertID] is None:
+				toVertPolyTable[vertID] = [faceID]
+			else:
+				toVertPolyTable[vertID].append(faceID)
+
+			index = index+1
+
+	fromPolyId = fromFaceId
+	toPolyId = toFaceId
+	fromStartVertexId = fromVertex1Id
+	fromEndVertexId = fromVertex2Id
+	toStartVertexId = toVertex1Id
+	toEndVertexId = toVertex2Id
+
+	fromPolyData = traversePoly( fromPolyId, fromStartVertexId, fromEndVertexId, fromPolyVertTable[fromPolyId] )
+	toPolyData = traversePoly( toPolyId, toStartVertexId, toEndVertexId, toPolyVertTable[toPolyId] )
+
+	fromCheckPolys = [fromPolyData]
+	toCheckPolys = [toPolyData]
+
+	fromPolysFound = [False]*len(fromVertices[0])
+	toPolysFound = [False]*len(toVertices[0])
+
+	for count in range( len(fromPolyVertTable) ):
+		newFromCheckPolys = []
+		newToCheckPolys = []
+		newFromCheckPolyIDs = []
+		newToCheckPolyIDs = []
+
+		for checkIndex,checkItem in enumerate(fromCheckPolys):
+			fromPolyId = fromCheckPolys[checkIndex]['id']
+			toPolyId = toCheckPolys[checkIndex]['id']
+			fromPolyEdges = fromCheckPolys[checkIndex]['edges']
+			toPolyEdges = toCheckPolys[checkIndex]['edges']
+
+			fromPolysFound[fromPolyId] = True
+			toPolysFound[toPolyId] = True
+			
+			for edgeIndex,edgeItem in enumerate(fromPolyEdges):
+				fromStartVertexId = fromPolyEdges[edgeIndex][0]
+				fromEndVertexId = fromPolyEdges[edgeIndex][1]
+				toStartVertexId = toPolyEdges[edgeIndex][0]
+				toEndVertexId = toPolyEdges[edgeIndex][1]
+
+				fromConnectingPolyId = getConnectingPoly( fromPolyId, set(fromVertPolyTable[fromStartVertexId]), set(fromVertPolyTable[fromEndVertexId]) )
+				toConnectingPolyId = getConnectingPoly( toPolyId, set(toVertPolyTable[toStartVertexId]), set(toVertPolyTable[toEndVertexId]) )
+
+				if fromConnectingPolyId != None and toConnectingPolyId != None:
+					fromPolyData = traversePoly( fromConnectingPolyId, fromStartVertexId, fromEndVertexId, fromPolyVertTable[fromConnectingPolyId] )
+					toPolyData = traversePoly( toConnectingPolyId, toStartVertexId, toEndVertexId, toPolyVertTable[toConnectingPolyId] )
+
+					fromPolyPoints = fromPolyData['polyPoints']
+					toPolyPoints = toPolyData['polyPoints']
+
+					for fromPolyPointIndex,fromPolyPoint in enumerate(fromPolyPoints):
+						fromPolyPointId = fromPolyPoints[fromPolyPointIndex]
+						toPolyPointId = toPolyPoints[fromPolyPointIndex]
+						toPointConvert[toPolyPointId] = fromPolyPointId
+
+					if not fromPolysFound[fromPolyData['id']] and fromPolyData['id'] not in newFromCheckPolyIDs:
+						newFromCheckPolyIDs.append( fromPolyData['id'] )
+						newFromCheckPolys.append( fromPolyData )
+						newToCheckPolys.append( toPolyData )
+
+		fromCheckPolys = list(newFromCheckPolys)
+		toCheckPolys = list(newToCheckPolys)
+
+	newToPointConvert = [None]*len(toPoints)
+
+	newPolys = []
+	newPolyConnects = []
+
+	newIndex = len(fromPoints)
+	for toId,fromId in enumerate(toPointConvert):
+		if fromId == None:
+			newToPointConvert[toId] = newIndex
+			newIndex = newIndex+1
+		else:
+			newToPointConvert[toId] = fromId
+
+	index = 0
+	for faceID,numberOfVerts in enumerate(toVertices[0]):
+		newPolys.append(numberOfVerts)
+
+		for x in range(numberOfVerts):
+			vertID = toVertices[1][index]
+			newPolyConnects.append( newToPointConvert[vertID] )
+
+			index = index+1
+
+	################################################################
+	#
+	# create a new mesh with the vertex IDs reordered
+	#
+	################################################################
+
+	if len(targetList) > 0:
+		for target in targetList:
+
+			################################################################
+			#
+			# use api to get the target mesh points list
+			#
+			################################################################
+
+			targetMesh = cmds.listRelatives( target, shapes=True )[0]
+			
+			targetSelectionList = om.MSelectionList()
+			targetSelectionList.add( targetMesh )
+			
+			targetDagPath = targetSelectionList.getDagPath(0)
+			targetMeshFn = om.MFnMesh( targetDagPath )
+			targetPoints = targetMeshFn.getPoints()
+
+			newTargetPoints = om.MPointArray()
+			newTargetPoints.setLength( len(targetPoints) )
+
+			for toId,fromId in enumerate(newToPointConvert):
+				newTargetPoints[fromId] = targetPoints[toId]
+
+			reorderedMesh = om.MFnMesh()
+			reorderedMesh.create( newTargetPoints, newPolys, newPolyConnects )
+			meshShape = reorderedMesh.partialPathName()
+			meshTransform = cmds.listRelatives(meshShape,parent=True)[0]
+			cmds.select(meshTransform)
+			cmds.hyperShade(assign='initialShadingGroup')
+			cmds.polySoftEdge(meshTransform, angle=0, ch=False)
+
+			#toMeshTransform = cmds.listRelatives(toMesh,parent=True)[0]
+			newMeshTransform = cmds.rename(meshTransform,target+'_reordered')
+
+			# copy and paste transform attributes
+			t = cmds.getAttr(target+'.translate')[0]
+			r = cmds.getAttr(target+'.rotate')[0]
+			s = cmds.getAttr(target+'.scale')[0]
+
+			cmds.setAttr( newMeshTransform+'.translate', t[0], t[1], t[2] )
+			cmds.setAttr( newMeshTransform+'.rotate', r[0], r[1], r[2] )
+			cmds.setAttr( newMeshTransform+'.scale', s[0], s[1], s[2] )
+
+			cmds.select(newMeshTransform)
+
+	else:
+		newPoints = om.MPointArray()
+		newPoints.setLength( len(toPoints) )
+
+		for toId,fromId in enumerate(newToPointConvert):
+			newPoints[fromId] = toPoints[toId]
+
+		reorderedMesh = om.MFnMesh()
+		reorderedMesh.create( newPoints, newPolys, newPolyConnects )
+		meshShape = reorderedMesh.partialPathName()
+		meshTransform = cmds.listRelatives(meshShape,parent=True)[0]
+		cmds.select(meshTransform)
+		cmds.hyperShade(assign='initialShadingGroup')
+		cmds.polySoftEdge(meshTransform, angle=0, ch=False)
+
+		toMeshTransform = cmds.listRelatives(toMesh,parent=True)[0]
+		newMeshTransform = cmds.rename(meshTransform,toMeshTransform+'_reordered')
+
+		# copy and paste transform attributes
+		t = cmds.getAttr(toMeshTransform+'.translate')[0]
+		r = cmds.getAttr(toMeshTransform+'.rotate')[0]
+		s = cmds.getAttr(toMeshTransform+'.scale')[0]
+
+		cmds.setAttr( newMeshTransform+'.translate', t[0], t[1], t[2] )
+		cmds.setAttr( newMeshTransform+'.rotate', r[0], r[1], r[2] )
+		cmds.setAttr( newMeshTransform+'.scale', s[0], s[1], s[2] )
+
+		cmds.select(newMeshTransform)
+
+	print('Finished Reordering Vertex IDs')
+
+
+def traversePoly( polyId, startVertexId, endVertexId, polyVerts ):
+	edges = []
+	polyPoints = []
+
+	edgeStartVertexId = startVertexId
+	endEndVertexId = endVertexId
+
+	for edgeIndex in range(len(polyVerts)):
+		polyPoints.append( edgeStartVertexId )
+		edges.append( [edgeStartVertexId, endEndVertexId] )
+		nextVertexId = getNextVertex( polyId, edgeStartVertexId, endEndVertexId, polyVerts )
+		edgeStartVertexId = endEndVertexId
+		endEndVertexId = nextVertexId
+
+	return { 'id':polyId,'edges':edges,'polyPoints':polyPoints }
+
+def getConnectingPoly( polyId, startVertPolySet, endVertPolySet ):
+	commonPolysSet = startVertPolySet & endVertPolySet
+
+	if polyId in commonPolysSet:
+		commonPolysSet.remove(polyId)
+
+	commonPolysList = list(commonPolysSet)
+	if len(commonPolysList) == 1:
+		return commonPolysList[0]
+	
+	return None
+
+def getNextVertex( polyId, startVertexId, endVertexId, polyVerts ):
+	numberOfVerts = len(polyVerts)
+	vertIndex = {}
+	for index,vertId in enumerate(polyVerts):
+		vertIndex[vertId] = index
+
+	startIndex = vertIndex[startVertexId]
+	endIndex = vertIndex[endVertexId]
+
+	if startIndex == 0 and endIndex == numberOfVerts-1:
+		return polyVerts[endIndex-1]
+
+	elif startIndex == numberOfVerts-1 and endIndex == 0:
+		return polyVerts[endIndex+1]
+
+	elif startIndex < endIndex:
+		nextIndex = endIndex+1
+		if nextIndex > numberOfVerts-1:
+			nextIndex = 0
+		return polyVerts[nextIndex]
+
+	elif startIndex > endIndex:
+		nextIndex = endIndex-1
+		if nextIndex < 0:
+			nextIndex = numberOfVerts-1
+		return polyVerts[nextIndex]
+
+	return None
+
+def extractIndex(component):
+	tokens = component.split('.')
+	number = tokens[len(tokens)-1].replace('f[','').replace('vtx[','').replace(']','')
+	return int( number )
+
+def positionReorderDoIt(*args):
 	meshes = []
 	sourceMeshText = cmds.textField( 'sourceMeshTextField', query=True, text=True )
 
@@ -141,9 +945,9 @@ def reorderDoIt(*args):
 
 	meshes.append( destinationMeshText )
 
-	reorder( meshes=meshes )
+	positionReorder( meshes=meshes )
 
-def reorder(**kwargs):
+def positionReorder(**kwargs):
 	meshes = kwargs.get('meshes',[])
 
 	################################################################
